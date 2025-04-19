@@ -417,13 +417,16 @@ export const useChatStore = createPersistStore(
           ? content
           : fillTemplateWith(content, modelConfig);
 
-        if (!isMcpResponse && attachImages && attachImages.length > 0) {
+        // OpenAI vision多模态格式：文本和图片都用数组
+        if (!isMcpResponse && (content || (attachImages && attachImages.length > 0))) {
           mContent = [
             ...(content ? [{ type: "text" as const, text: content }] : []),
-            ...attachImages.map((url) => ({
-              type: "image_url" as const,
-              image_url: { url },
-            })),
+            ...(attachImages && attachImages.length > 0
+              ? attachImages.map((url) => ({
+                  type: "image_url" as const,
+                  image_url: { url, detail: "auto" },
+                }))
+              : []),
           ];
         }
 

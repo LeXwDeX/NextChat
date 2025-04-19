@@ -297,6 +297,10 @@ export function stream(
 
   controller.signal.onabort = finish;
 
+  // 首包超时机制变量提升
+  let firstChunkReceived = false;
+  let firstChunkTimeoutId: any;
+
   function chatApi(
     chatPath: string,
     headers: any,
@@ -316,6 +320,15 @@ export function stream(
       () => controller.abort(),
       REQUEST_TIMEOUT_MS,
     );
+    // 新增首包超时机制
+    const FIRST_CHUNK_TIMEOUT_MS = 120000; // 120秒
+    firstChunkTimeoutId = setTimeout(() => {
+      if (!firstChunkReceived && !finished) {
+        finished = true;
+        options.onError?.(new Error("首包超时：服务器长时间无响应"));
+      }
+    }, FIRST_CHUNK_TIMEOUT_MS);
+
     fetchEventSource(chatPath, {
       fetch: tauriFetch as any,
       ...chatPayload,
@@ -419,6 +432,10 @@ export function streamWithThink(
   let isInThinkingMode = false;
   let lastIsThinking = false;
   let lastIsThinkingTagged = false; //between <think> and </think> tags
+
+  // 首包超时机制变量提升
+  let firstChunkReceived = false;
+  let firstChunkTimeoutId: any;
 
   // animate response to make it looks smooth
   function animateResponseText() {
@@ -585,12 +602,18 @@ export function streamWithThink(
       },
       onmessage(msg) {
         if (msg.data === "[DONE]" || finished) {
+          clearTimeout(firstChunkTimeoutId);
           return finish();
         }
         const text = msg.data;
-        // Skip empty messages
+        // 心跳包/空包容忍：收到空包直接 return，不报错
         if (!text || text.trim().length === 0) {
           return;
+        }
+        // 首包超时：收到首个有效包时清除定时器
+        if (!firstChunkReceived) {
+          firstChunkReceived = true;
+          clearTimeout(firstChunkTimeoutId);
         }
         try {
           const chunk = parseSSE(text, runTools);

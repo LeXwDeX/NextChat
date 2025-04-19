@@ -112,34 +112,51 @@ export async function requestOpenai(req: NextRequest) {
   if (serverConfig.customModels && req.body) {
     try {
       const clonedBody = await req.text();
-      fetchOptions.body = clonedBody;
+      let jsonBody: any = null;
+      let isJson = false;
+      try {
+        jsonBody = JSON.parse(clonedBody);
+        isJson = true;
+      } catch {
+        // not json, skip
+      }
 
-      const jsonBody = JSON.parse(clonedBody) as { model?: string };
+      // 参数适配：o3、o4-mini，需要 max_completion_tokens 参数，而不是 max_tokens。
+      const model = jsonBody?.model;
+      const needMaxCompletionTokens =
+        typeof model === "string" &&
+        (model.toLowerCase().includes("o3") || model.toLowerCase().includes("o4-mini"));
+      if (isJson && needMaxCompletionTokens && jsonBody.max_tokens !== undefined) {
+        jsonBody.max_completion_tokens = jsonBody.max_tokens;
+        delete jsonBody.max_tokens;
+      }
 
       // not undefined and is false
       if (
         isModelNotavailableInServer(
           serverConfig.customModels,
-          jsonBody?.model as string,
+          model as string,
           [
             ServiceProvider.OpenAI,
             ServiceProvider.Azure,
-            jsonBody?.model as string, // support provider-unspecified model
+            model as string, // support provider-unspecified model
           ],
         )
       ) {
         return NextResponse.json(
           {
             error: true,
-            message: `you are not allowed to use ${jsonBody?.model} model`,
+            message: `you are not allowed to use ${model} model`,
           },
           {
             status: 403,
           },
         );
       }
+
+      fetchOptions.body = isJson ? JSON.stringify(jsonBody) : clonedBody;
     } catch (e) {
-      console.error("[OpenAI] gpt4 filter", e);
+      console.error("[OpenAI] gpt4 filter or param patch", e);
     }
   }
 

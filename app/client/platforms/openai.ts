@@ -184,6 +184,7 @@ export class ChatGPTApi implements LLMApi {
   }
 
   async chat(options: ChatOptions) {
+    console.log("[DEBUG] options.messages (input):", options.messages);
     const modelConfig = {
       ...useAppConfig.getState().modelConfig,
       ...useChatStore.getState().currentSession().mask.modelConfig,
@@ -196,9 +197,10 @@ export class ChatGPTApi implements LLMApi {
     let requestPayload: RequestPayload | DalleRequestPayload;
 
     const isDalle3 = _isDalle3(options.config.model);
-    const isO1OrO3 =
+    const isO1O3O4Mini =
       options.config.model.startsWith("o1") ||
-      options.config.model.startsWith("o3");
+      options.config.model.startsWith("o3") ||
+      options.config.model.toLowerCase().includes("o4-mini");
     if (isDalle3) {
       const prompt = getMessageTextContent(
         options.messages.slice(-1)?.pop() as any,
@@ -217,34 +219,46 @@ export class ChatGPTApi implements LLMApi {
       const visionModel = isVisionModel(options.config.model);
       const messages: ChatOptions["messages"] = [];
       for (const v of options.messages) {
-        const content = visionModel
-          ? await preProcessImageContent(v.content)
-          : getMessageTextContent(v);
-        if (!(isO1OrO3 && v.role === "system"))
+        let content: any;
+        if (visionModel) {
+          content = await preProcessImageContent(v.content);
+        } else {
+          content = getMessageTextContent(v);
+        }
+        // 统一采用 vision 多模态格式，content 已由 onUserInput 保证为数组
+        if (v.role !== "system") {
           messages.push({ role: v.role, content });
+        }
       }
+      console.log("[DEBUG] messages (final):", messages);
 
-      // O1 not support image, tools (plugin in ChatGPTNextWeb) and system, stream, logprobs, temperature, top_p, n, presence_penalty, frequency_penalty yet.
+      // O1/O3/o4-mini 不支持 tools (plugin in ChatGPTNextWeb) and system, stream, logprobs, temperature, top_p, n, presence_penalty, frequency_penalty yet.
       requestPayload = {
         messages,
         stream: options.config.stream,
         model: modelConfig.model,
-        temperature: !isO1OrO3 ? modelConfig.temperature : 1,
-        presence_penalty: !isO1OrO3 ? modelConfig.presence_penalty : 0,
-        frequency_penalty: !isO1OrO3 ? modelConfig.frequency_penalty : 0,
-        top_p: !isO1OrO3 ? modelConfig.top_p : 1,
+        temperature: !isO1O3O4Mini ? modelConfig.temperature : 1,
+        presence_penalty: !isO1O3O4Mini ? modelConfig.presence_penalty : 0,
+        frequency_penalty: !isO1O3O4Mini ? modelConfig.frequency_penalty : 0,
+        top_p: !isO1O3O4Mini ? modelConfig.top_p : 1,
         // max_tokens: Math.max(modelConfig.max_tokens, 1024),
-        // Please do not ask me why not send max_tokens, no reason, this param is just shit, I dont want to explain anymore.
       };
 
-      // O1 使用 max_completion_tokens 控制token数 (https://platform.openai.com/docs/guides/reasoning#controlling-costs)
-      if (isO1OrO3) {
+      // O1/O3/o4-mini 使用 max_completion_tokens 控制token数
+      if (isO1O3O4Mini) {
         requestPayload["max_completion_tokens"] = modelConfig.max_tokens;
       }
 
-      // add max_tokens to vision model
-      if (visionModel) {
+      // visionModel 只对非 O1/O3/o4-mini 模型加 max_tokens
+      if (visionModel && !isO1O3O4Mini) {
         requestPayload["max_tokens"] = Math.max(modelConfig.max_tokens, 4000);
+      }
+    }
+
+    // 过滤掉所有值为 null 的字段，防止 parallel_tool_calls: null 报错
+    for (const key in requestPayload) {
+      if ((requestPayload as any)[key] === null) {
+        delete (requestPayload as any)[key];
       }
     }
 
