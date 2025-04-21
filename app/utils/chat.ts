@@ -321,7 +321,7 @@ export function stream(
       REQUEST_TIMEOUT_MS,
     );
     // 新增首包超时机制
-    const FIRST_CHUNK_TIMEOUT_MS = 120000; // 120秒
+    const FIRST_CHUNK_TIMEOUT_MS = 1000*60*3; // 3分钟
     firstChunkTimeoutId = setTimeout(() => {
       if (!firstChunkReceived && !finished) {
         finished = true;
