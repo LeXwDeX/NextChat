@@ -455,6 +455,8 @@ export const VISION_MODEL_REGEXES = [
   /qwen2-vl/,
   /gpt-4-turbo(?!.*preview)/, // Matches "gpt-4-turbo" but not "gpt-4-turbo-preview"
   /^dall-e-3$/, // Matches exactly "dall-e-3"
+  /model-router/,
+  /gpt-image-1/,
   /glm-4v/,
   /vl/i,
 ];
