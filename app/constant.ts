@@ -408,45 +408,21 @@ You are an AI assistant with access to system tools. Your role is to help users 
    
 `;
 
-export const SUMMARIZE_MODEL = "gpt-4o-mini";
+export const SUMMARIZE_MODEL = "gpt-4.1-mini";
 export const GEMINI_SUMMARIZE_MODEL = "gemini-pro";
 export const DEEPSEEK_SUMMARIZE_MODEL = "deepseek-chat";
 
 export const KnowledgeCutOffDate: Record<string, string> = {
-  default: "2021-09",
-  "gpt-4-turbo": "2023-12",
-  "gpt-4-turbo-2024-04-09": "2023-12",
-  "gpt-4-turbo-preview": "2023-12",
-  "gpt-4.1": "2024-06",
-  "gpt-4.1-2025-04-14": "2024-06",
-  "gpt-4.1-mini": "2024-06",
-  "gpt-4.1-mini-2025-04-14": "2024-06",
-  "gpt-4.1-nano": "2024-06",
-  "gpt-4.1-nano-2025-04-14": "2024-06",
-  "gpt-4.5-preview": "2023-10",
-  "gpt-4.5-preview-2025-02-27": "2023-10",
-  "gpt-4o": "2023-10",
-  "gpt-4o-2024-05-13": "2023-10",
-  "gpt-4o-2024-08-06": "2023-10",
-  "gpt-4o-2024-11-20": "2023-10",
-  "chatgpt-4o-latest": "2023-10",
-  "gpt-4o-mini": "2023-10",
-  "gpt-4o-mini-2024-07-18": "2023-10",
-  "gpt-4-vision-preview": "2023-04",
-  "o1-mini-2024-09-12": "2023-10",
-  "o1-mini": "2023-10",
-  "o1-preview-2024-09-12": "2023-10",
-  "o1-preview": "2023-10",
-  "o1-2024-12-17": "2023-10",
-  o1: "2023-10",
-  "o3-mini-2025-01-31": "2023-10",
-  "o3-mini": "2023-10",
-  // After improvements,
-  // it's now easier to add "KnowledgeCutOffDate" instead of stupid hardcoding it, as was done previously.
-  "gemini-pro": "2023-12",
-  "gemini-pro-vision": "2023-12",
-  "deepseek-chat": "2024-07",
-  "deepseek-coder": "2024-07",
+  default: "2025-04-14",
+  "gpt-4.1": "2025-04-14",
+  "gpt-4.1-mini": "2025-04-14",
+  "gpt-4.1-nano": "2025-04-14",
+  "o4-mini": "2025-04-16",
+  "o3": "2025-04-16",
+  "o3-mini": "2025-01-31",
+  "o1": "2024-12-17",
+  "o1-preview": "2024-09-12",
+  "o1-mini": "2024-09-12",
 };
 
 export const DEFAULT_TTS_ENGINE = "OpenAI-TTS";
@@ -486,41 +462,18 @@ export const VISION_MODEL_REGEXES = [
 export const EXCLUDE_VISION_MODEL_REGEXES = [/claude-3-5-haiku-20241022/];
 
 const openaiModels = [
-  // As of July 2024, gpt-4o-mini should be used in place of gpt-3.5-turbo,
-  // as it is cheaper, more capable, multimodal, and just as fast. gpt-3.5-turbo is still available for use in the API.
-  "gpt-3.5-turbo",
-  "gpt-3.5-turbo-1106",
-  "gpt-3.5-turbo-0125",
-  "gpt-4",
-  "gpt-4-0613",
-  "gpt-4-32k",
-  "gpt-4-32k-0613",
-  "gpt-4-turbo",
-  "gpt-4-turbo-preview",
-  "gpt-4.1",
-  "gpt-4.1-2025-04-14",
-  "gpt-4.1-mini",
-  "gpt-4.1-mini-2025-04-14",
-  "gpt-4.1-nano",
-  "gpt-4.1-nano-2025-04-14",
-  "gpt-4.5-preview",
-  "gpt-4.5-preview-2025-02-27",
   "gpt-4o",
-  "gpt-4o-2024-05-13",
-  "gpt-4o-2024-08-06",
-  "gpt-4o-2024-11-20",
-  "chatgpt-4o-latest",
   "gpt-4o-mini",
-  "gpt-4o-mini-2024-07-18",
-  "gpt-4-vision-preview",
-  "gpt-4-turbo-2024-04-09",
-  "gpt-4-1106-preview",
-  "dall-e-3",
+  "gpt-4.1",
+  "gpt-4.1-mini",
+  "gpt-4.1-nano",
   "o1-mini",
   "o1-preview",
   "o3",
   "o3-mini",
   "o4-mini",
+  "model-router",
+  "gpt-image-1"
 ];
 
 const googleModels = [
